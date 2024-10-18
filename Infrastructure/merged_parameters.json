@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "databaseAccounts_shez_name": {
+      "value": "shez"
+    },
+    "sites_shez_name": {
+      "value": "shez"
+    },
+    "serverfarms_ASP_classshezana_a70d_externalid": {
+      "value": "/subscriptions/290e5ad3-dec3-49d9-a307-a31200a7c1aa/resourceGroups/classshezana/providers/Microsoft.Web/serverfarms/ASP-classshezana-a70d"
+    },
+    "storageAccounts_shezana_name": {
+      "value": "shezana1"  
+    }
+  }
+}

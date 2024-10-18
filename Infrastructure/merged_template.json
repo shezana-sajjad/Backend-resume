@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "databaseAccounts_shez_name": {
+      "defaultValue": "shez",
+      "type": "String"
+    },
+    "sites_shez_name": {
+      "defaultValue": "shez",
+      "type": "String"
+    },
+    "serverfarms_ASP_classshezana_a70d_externalid": {
+      "defaultValue": "/subscriptions/290e5ad3-dec3-49d9-a307-a31200a7c1aa/resourceGroups/classshezana/providers/Microsoft.Web/serverfarms/ASP-classshezana-a70d",
+      "type": "String"
+    },
+    "storageAccounts_shezana_name": {
+      "defaultValue": "shezana1",  
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('storageAccounts_shezana_name')]",
+      "location": "southindia",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "dnsEndpointType": "Standard",
+        "defaultToOAuthAuthentication": false,
+        "publicNetworkAccess": "Enabled",
+        "allowCrossTenantReplication": false,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": true,
+        "largeFileSharesState": "Enabled",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "requireInfrastructureEncryption": false,
+          "services": {
+            "file": {
+              "keyType": "Account",
+              "enabled": true
+            },
+            "blob": {
+              "keyType": "Account",
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "accessTier": "Hot"
+
+      }
+    }
+  ]
+}
