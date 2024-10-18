@@ -6,7 +6,7 @@ import json
 
 # Initialize the Cosmos DB client with your credentials
 cosmos_endpoint = 'https://shez.documents.azure.com:443/'  # Your Cosmos DB endpoint
-cosmos_key = 'iGAMKFP4aUz1RqmiDETybxubnPibOlHAMEH2GIItrs0DXmFISh3tNbkjuiIJsRfkxDoYZRO6DA6fACDbGSQidQ=='  # Your Cosmos DB key
+cosmos_key = 'AZURE_COSMOSDB_KEY'  # Your Cosmos DB key
 database_name = 'visit-counter'  # Your database name
 container_name = 'count'  # Your container name
 
