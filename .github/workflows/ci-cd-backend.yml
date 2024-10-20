@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install azure-functions azure-cosmos
+        pip install azure-functions azure-cosmos pytest  # Ensure pytest is included
 
     - name: Set environment variables
       env:
@@ -35,7 +35,7 @@ jobs:
         AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
       run: |
         cd MyFunction
-        pytest  # Add any necessary options for pytest
+        pytest  # Run your tests
 
   # Optional: Add a deployment job
   deploy:
@@ -60,4 +60,3 @@ jobs:
         AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}  # Ensure this secret contains the full JSON credentials
       run: |
         func azure functionapp publish $AZURE_FUNCTION_APP_NAME --python
-
