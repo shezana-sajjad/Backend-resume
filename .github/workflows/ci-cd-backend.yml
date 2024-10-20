@@ -10,42 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r MyFunction/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r MyFunction/requirements.txt
 
-    - name: Set environment variables
-      run: |
-        echo "COSMOS_ENDPOINT=${{ secrets.COSMOS_ENDPOINT }}" >> $GITHUB_ENV
-        echo "COSMOS_KEY=${{ secrets.COSMOS_KEY }}" >> $GITHUB_ENV
-        echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
-        echo "CONTAINER_NAME=${{ secrets.CONTAINER_NAME }}" >> $GITHUB_ENV
+      - name: Set environment variables
+        run: |
+          echo "COSMOS_ENDPOINT=https://shez.documents.azure.com:443/" >> $GITHUB_ENV
+          echo "COSMOS_KEY=iGAMKFP4aUz1RqmiDETybxubnPibOlHAMEH2GIItrs0DXmFISh3tNbkjuiIJsRfkxDoYZRO6DA6fACDbGSQidQ==" >> $GITHUB_ENV
+          echo "DATABASE_NAME=visit-counter" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=count" >> $GITHUB_ENV
 
-    # Optional step to debug: Print the environment variables (remove this step in production)
-    - name: Show environment variables
-      run: |
-        echo "COSMOS_ENDPOINT: $COSMOS_ENDPOINT"
-        echo "COSMOS_KEY: $COSMOS_KEY"
+      # Optional step to debug: Print the environment variables (remove this step in production)
+      - name: Show environment variables
+        run: |
+          echo "COSMOS_ENDPOINT: $COSMOS_ENDPOINT"
+          echo "COSMOS_KEY: $COSMOS_KEY"
 
-    - name: Run tests
-      run: |
-        cd MyFunction
-        pytest
+      - name: Run tests
+        run: |
+          cd MyFunction
+          pytest
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy ARM Template
-      run: |
-        az deployment group create --resource-group classshezana --template-file Infrastructure/merged_template.json --parameters Infrastructure/merged_parameters.json
+      - name: Deploy ARM Template
+        run: |
+          az deployment group create --resource-group classshezana --template-file Infrastructure/merged_template.json --parameters Infrastructure/merged_parameters.json
