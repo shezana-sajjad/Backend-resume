@@ -1,16 +1,12 @@
-import os
-from dotenv import load_dotenv
 import azure.functions as func
 import logging
 from azure.cosmos import CosmosClient, exceptions
+import os
 import json
 
-# Load environment variables from .env file (for local testing)
-load_dotenv()
-
 # Initialize the Cosmos DB client with your credentials
-cosmos_endpoint = os.environ.get("AZURE_COSMOSDB_ENDPOINT")
-cosmos_key = os.environ.get("AZURE_COSMOSDB_KEY")
+cosmos_endpoint = os.environ.get("AZURE_COSMOSDB_ENDPOINT")  # Use the correct variable name
+cosmos_key = os.environ.get("AZURE_COSMOSDB_KEY")  # Use the correct variable name
 database_name = 'visit-counter'  # Your database name
 container_name = 'count'  # Your container name
 
