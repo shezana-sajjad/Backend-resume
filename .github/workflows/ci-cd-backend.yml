@@ -25,10 +25,10 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "COSMOS_ENDPOINT=https://shez.documents.azure.com:443/" >> $GITHUB_ENV
-          echo "COSMOS_KEY=iGAMKFP4aUz1RqmiDETybxubnPibOlHAMEH2GIItrs0DXmFISh3tNbkjuiIJsRfkxDoYZRO6DA6fACDbGSQidQ==" >> $GITHUB_ENV
-          echo "DATABASE_NAME=visit-counter" >> $GITHUB_ENV
-          echo "CONTAINER_NAME=count" >> $GITHUB_ENV
+          echo "COSMOS_ENDPOINT=${{ secrets.COSMOS_ENDPOINT }}" >> $GITHUB_ENV
+          echo "COSMOS_KEY=${{ secrets.COSMOS_KEY }}" >> $GITHUB_ENV
+          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=${{ secrets.CONTAINER_NAME }}" >> $GITHUB_ENV
 
       # Optional step to debug: Print the environment variables (remove this step in production)
       - name: Show environment variables
@@ -48,4 +48,4 @@ jobs:
 
       - name: Deploy ARM Template
         run: |
-          az deployment group create --resource-group classshezana --template-file Infrastructure/merged_template.json --parameters Infrastructure/merged_parameters.json
+          az deployment group create --resource-group classsamreen --template-file Infrastructure/merged_template.json --parameters Infrastructure/merged_parameters.json
