@@ -1,4 +1,5 @@
-# Trigger this pipeline on every push to the main branch
+name: CI/CD for Azure Function
+
 on:
   push:
     branches:
@@ -9,56 +10,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the GitHub repository
-      - name: Checkout code
-        uses: actions/checkout@v2
+    # Step 1: Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Step 2: Set up Python environment
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'  # Adjust this based on your project requirements
+    # Step 2: Set up Python
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      # Step 3: Install dependencies from requirements.txt in MyFunction folder
-      - name: Install dependencies
-        run: pip install -r MyFunction/requirements.txt  # Adjust the path as necessary
+    # Step 3: Install dependencies (if required)
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r MyFunction/requirements.txt  # Adjust if necessary
 
-      # Step 4: Run tests using pytest
-      - name: Run Tests
-        env:
-          AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
-          AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
-        run: |
-          if [ -f MyFunction/test/test_function_app.py ]; then
-            pytest MyFunction/test/test_function_app.py;
-          else
-            echo "No test file found, skipping tests.";
-          fi
+    # Step 4: Azure CLI Login
+    - name: Azure CLI Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}  # Use the correct Azure credentials secret
 
-      # Step 5: Set up Azure CLI
-      - name: Set up Azure CLI
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}
+    # Step 5: List files in current directory for debugging
+    - name: List files in current directory
+      run: ls -R
 
-      # Step 6: Create a zip file of the function app and infrastructure
-      - name: Create ZIP package
-        run: |
-          zip -r MyFunction.zip MyFunction/ Infrastructure/  # Create a zip file including both directories
+    # Step 6: Create ZIP package with error handling
+    - name: Create ZIP package
+      run: |
+        zip -r MyFunction.zip MyFunction/ Infrastructure/ || { echo "Failed to create zip"; exit 1; }
 
-      # Step 7: Deploy to Azure Functions
-      - name: Deploy to Azure Functions
-        run: |
-          az functionapp deployment source config-zip \
-          --resource-group classshezana \  # Your resource group
-          --name http_triggershez \  # Your Azure Function name
-          --src MyFunction.zip  # Path to the zip file
+    # Step 7: Deploy to Azure Function App
+    - name: Deploy to Azure Function App
+      run: |
+        az functionapp deployment source config-zip \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --name ${{ secrets.AZURE_FUNCTIONAPP_NAME }} \
+          --src MyFunction.zip
 
-      # Step 8: Purge Azure CDN (if you are using CDN for static content delivery)
-      - name: Purge Azure CDN
-        run: |
-          az cdn endpoint purge \
-          --resource-group 'Team SRE' \
-          --profile-name shezana-cdn \
-          --name shezana-end \
-          --content-paths "/*"
+    # Step 8: Purge Azure CDN (if needed)
+    - name: Purge Azure CDN
+      run: |
+        az cdn endpoint purge \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --profile-name ${{ secrets.AZURE_CDN_PROFILE }} \
+          --name ${{ secrets.AZURE_CDN_ENDPOINT }} \
+          --content-paths '/*'
