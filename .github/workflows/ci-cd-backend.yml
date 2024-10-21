@@ -25,13 +25,13 @@ jobs:
 
     - name: Set environment variables
       run: |
-        echo "COSMOS_DB_ENDPOINT=${{ secrets.AZURE_COSMOSDB_ENDPOINT  }}" >> $GITHUB_ENV
-        echo "COSMOS_DB_KEY=${{ secrets.AZURE_COSMOSDB_KEY }}" >> $GITHUB_ENV
+        echo "AZURE_COSMOSDB_ENDPOINT=${{ secrets.AZURE_COSMOSDB_ENDPOINT  }}" >> $GITHUB_ENV
+        echo "AZURE_COSMOSDB_KEY=${{ secrets.AZURE_COSMOSDB_KEY }}" >> $GITHUB_ENV
 
     - name: Run tests
       env:
-        COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
-        COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
+        AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
+        AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
       run: |
         cd MyFunction/test
         pytest
