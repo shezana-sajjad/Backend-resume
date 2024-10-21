@@ -4,7 +4,6 @@ on:
     branches:
       - main
 
-# Define the jobs that this pipeline will run
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -22,13 +21,13 @@ jobs:
 
       # Step 3: Install dependencies from requirements.txt in MyFunction folder
       - name: Install dependencies
-        run: pip install -r MyFunction/requirements.txt  # Update the path to MyFunction folder
+        run: pip install -r MyFunction/requirements.txt  # Adjust the path as necessary
 
       # Step 4: Run tests using pytest
       - name: Run Tests
         env:
-          AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}  # Use your Azure Cosmos DB endpoint from GitHub secrets
-          AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}  # Use your Azure Cosmos DB key from GitHub secrets
+          AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
+          AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
         run: |
           if [ -f MyFunction/test/test_function_app.py ]; then
             pytest MyFunction/test/test_function_app.py;
@@ -40,25 +39,26 @@ jobs:
       - name: Set up Azure CLI
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}  # Using the student subscription credentials
+          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}
 
-      # Step 6: Create a zip file of the function app directory
+      # Step 6: Create a zip file of the function app and infrastructure
       - name: Create ZIP package
-        run: zip -r MyFunction.zip MyFunction/  # Adjust this if your function app is in a different directory
+        run: |
+          zip -r MyFunction.zip MyFunction/ Infrastructure/  # Create a zip file including both directories
 
       # Step 7: Deploy to Azure Functions
       - name: Deploy to Azure Functions
         run: |
           az functionapp deployment source config-zip \
-          --resource-group classshezana \  # Your resource group for the Azure Function
-          --name http_triggershez \  # Your function app name
-          --src MyFunction.zip  # Path to the zip file created
+          --resource-group classshezana \  # Your resource group
+          --name http_triggershez \  # Your Azure Function name
+          --src MyFunction.zip  # Path to the zip file
 
       # Step 8: Purge Azure CDN (if you are using CDN for static content delivery)
       - name: Purge Azure CDN
         run: |
           az cdn endpoint purge \
-          --resource-group 'Team SRE' \  # Your Pay-As-You-Go resource group
-          --profile-name shezana-cdn \  # Your CDN profile name
-          --name shezana-end \  # Your CDN endpoint name
+          --resource-group 'Team SRE' \
+          --profile-name shezana-cdn \
+          --name shezana-end \
           --content-paths "/*"
