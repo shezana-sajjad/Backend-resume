@@ -1,5 +1,3 @@
-name: CI/CD Pipeline for MyFunctionApp
-
 # Trigger this pipeline on every push to the main branch
 on:
   push:
@@ -38,26 +36,29 @@ jobs:
             echo "No test file found, skipping tests.";
           fi
 
-      # Step 5: Set up Azure CLI for deployment using Student credentials
+      # Step 5: Set up Azure CLI
       - name: Set up Azure CLI
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}  # Use your Azure credentials for the student subscription
+          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}  # Using the student subscription credentials
 
-      # Step 6: Deploy to Azure Functions
+      # Step 6: Create a zip file of the function app directory
+      - name: Create ZIP package
+        run: zip -r MyFunction.zip MyFunction/  # Adjust this if your function app is in a different directory
+
+      # Step 7: Deploy to Azure Functions
       - name: Deploy to Azure Functions
         run: |
           az functionapp deployment source config-zip \
           --resource-group classshezana \  # Your resource group for the Azure Function
           --name http_triggershez \  # Your function app name
-          --src-path MyFunction/  # Path to your function app directory
+          --src MyFunction.zip  # Path to the zip file created
 
-      # Step 7: Purge Azure CDN (using Pay-As-You-Go credentials)
+      # Step 8: Purge Azure CDN (if you are using CDN for static content delivery)
       - name: Purge Azure CDN
         run: |
-          az login --service-principal -u ${{ secrets.AZURE_CREDENTIALS_PAYG.appId }} -p ${{ secrets.AZURE_CREDENTIALS_PAYG.password }} --tenant ${{ secrets.AZURE_CREDENTIALS_PAYG.tenant }}  # Login using Pay-As-You-Go credentials
           az cdn endpoint purge \
-          --resource-group 'Team SRE' \  # Your resource group for the CDN
+          --resource-group 'Team SRE' \  # Your Pay-As-You-Go resource group
           --profile-name shezana-cdn \  # Your CDN profile name
           --name shezana-end \  # Your CDN endpoint name
           --content-paths "/*"
