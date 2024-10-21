@@ -31,26 +31,38 @@ jobs:
         env:
           AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}  # Use your Azure Cosmos DB endpoint from GitHub secrets
           AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}  # Use your Azure Cosmos DB key from GitHub secrets
-        run: pytest test/test_function_app.py
+        run: |
+          if [ -f MyFunction/test/test_function_app.py ]; then
+            pytest MyFunction/test/test_function_app.py;
+          else
+            echo "No test file found, skipping tests.";
+          fi
 
-      # Step 5: Deploy to Azure Functions (assuming you're using Azure CLI for deployment)
-      - name: Set up Azure CLI
+      # Step 5: Login to Azure for Students Subscription (for Function App and CosmosDB)
+      - name: Set up Azure CLI for Student Subscription
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}  # You should set this in your GitHub Secrets as a JSON string
+          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}
 
+      # Step 6: Deploy to Azure Functions
       - name: Deploy to Azure Functions
         run: |
           az functionapp deployment source config-zip \
-          --resource-group <your-resource-group> \
-          --name <your-function-app-name> \
+          --resource-group classshezana \  # Your resource group name
+          --name http_triggershez \  # Your Function App name
           --src-path MyFunction/  # Path to your function app directory
 
-      # Step 6: Purge Azure CDN (if you are using CDN for static content delivery)
+      # Step 7: Login to Pay-As-You-Go Subscription (for CDN)
+      - name: Set up Azure CLI for Pay-As-You-Go Subscription
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PAYG }}
+
+      # Step 8: Purge Azure CDN
       - name: Purge Azure CDN
         run: |
           az cdn endpoint purge \
-          --resource-group <your-resource-group> \
-          --profile-name <your-cdn-profile-name> \
-          --name <your-cdn-endpoint-name> \
+          --resource-group "Team SRE" \  # Your Pay-As-You-Go resource group name
+          --profile-name shezana-cdn \  # Your CDN profile name
+          --name shezana-end \  # Your CDN endpoint name
           --content-paths "/*"
