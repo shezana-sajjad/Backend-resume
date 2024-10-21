@@ -33,7 +33,7 @@ jobs:
         COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
         COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
       run: |
-        cd MyFunctions/tests
+        cd MyFunctions/test
         pytest
 
     - name: Azure Login
