@@ -38,31 +38,26 @@ jobs:
             echo "No test file found, skipping tests.";
           fi
 
-      # Step 5: Login to Azure for Students Subscription (for Function App and CosmosDB)
-      - name: Set up Azure CLI for Student Subscription
+      # Step 5: Set up Azure CLI for deployment using Student credentials
+      - name: Set up Azure CLI
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}
+          creds: ${{ secrets.AZURE_CREDENTIALS_STUDENT }}  # Use your Azure credentials for the student subscription
 
       # Step 6: Deploy to Azure Functions
       - name: Deploy to Azure Functions
         run: |
           az functionapp deployment source config-zip \
-          --resource-group classshezana \  # Your resource group name
-          --name http_triggershez \  # Your Function App name
+          --resource-group classshezana \  # Your resource group for the Azure Function
+          --name http_triggershez \  # Your function app name
           --src-path MyFunction/  # Path to your function app directory
 
-      # Step 7: Login to Pay-As-You-Go Subscription (for CDN)
-      - name: Set up Azure CLI for Pay-As-You-Go Subscription
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_PAYG }}
-
-      # Step 8: Purge Azure CDN
+      # Step 7: Purge Azure CDN (using Pay-As-You-Go credentials)
       - name: Purge Azure CDN
         run: |
+          az login --service-principal -u ${{ secrets.AZURE_CREDENTIALS_PAYG.appId }} -p ${{ secrets.AZURE_CREDENTIALS_PAYG.password }} --tenant ${{ secrets.AZURE_CREDENTIALS_PAYG.tenant }}  # Login using Pay-As-You-Go credentials
           az cdn endpoint purge \
-          --resource-group "Team SRE" \  # Your Pay-As-You-Go resource group name
+          --resource-group 'Team SRE' \  # Your resource group for the CDN
           --profile-name shezana-cdn \  # Your CDN profile name
           --name shezana-end \  # Your CDN endpoint name
           --content-paths "/*"
