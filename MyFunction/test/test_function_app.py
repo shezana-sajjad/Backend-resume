@@ -2,8 +2,15 @@ import unittest
 from unittest.mock import patch, MagicMock
 from azure.functions import HttpRequest
 import json
-from azure.cosmos.exceptions import CosmosResourceNotFoundError, CosmosHttpResponseError  # Import the correct exceptions
-from function_app import visitor_counter  # Assuming your function is named visitor_counter
+import os
+from dotenv import load_dotenv
+from azure.cosmos.exceptions import CosmosResourceNotFoundError, CosmosHttpResponseError  # Import correct exceptions
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Import the function to be tested
+from function_app import visitor_counter
 
 class TestVisitorCounterFunction(unittest.TestCase):
 
@@ -21,7 +28,8 @@ class TestVisitorCounterFunction(unittest.TestCase):
         req = HttpRequest(
             method='GET',
             url='/api/visitor-counter',
-            body=None
+            body=None,
+            params={}
         )
 
         # Call the function
@@ -49,7 +57,8 @@ class TestVisitorCounterFunction(unittest.TestCase):
         req = HttpRequest(
             method='GET',
             url='/api/visitor-counter',
-            body=None
+            body=None,
+            params={}
         )
 
         # Call the function
@@ -74,7 +83,8 @@ class TestVisitorCounterFunction(unittest.TestCase):
         req = HttpRequest(
             method='GET',
             url='/api/visitor-counter',
-            body=None
+            body=None,
+            params={}
         )
 
         # Call the function
@@ -84,6 +94,36 @@ class TestVisitorCounterFunction(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         response_data = json.loads(response.get_body())
         self.assertEqual(response_data['error'], "Failed to update the visitor count in Cosmos DB.")
+
+    @patch('function_app.container')  # Mock the Cosmos DB container
+    def test_visitor_counter_with_env_variables(self, mock_container, monkeypatch):
+        """Test with the environment variables for Cosmos DB."""
+
+        # Mock the environment variables for Cosmos DB
+        monkeypatch.setenv("AZURE_COSMOSDB_ENDPOINT", os.getenv("AZURE_COSMOSDB_ENDPOINT"))
+        monkeypatch.setenv("AZURE_COSMOSDB_KEY", os.getenv("AZURE_COSMOSDB_KEY"))
+
+        # Mock Cosmos DB to return an existing visitor count
+        mock_container.read_item.return_value = {'id': 'visitor_count', 'count': 5}
+
+        # Create an HTTP request
+        req = HttpRequest(
+            method='GET',
+            url='/api/visitor-counter',
+            body=None,
+            params={}
+        )
+
+        # Call the function
+        response = visitor_counter(req)
+        
+        # Assert the status code and response content
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.get_body())
+        self.assertEqual(response_data['count'], 6)  # Since the previous count was 5
+        
+        # Ensure upsert_item was called to update the count
+        mock_container.upsert_item.assert_called_with({'id': 'visitor_count', 'count': 6})
 
 if __name__ == '__main__':
     unittest.main()
