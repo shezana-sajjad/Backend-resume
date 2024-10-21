@@ -12,8 +12,8 @@ key = os.environ.get("AZURE_COSMOSDB_KEY")
 print("AZURE_COSMOSDB_ENDPOINT:", endpoint)
 print("AZURE_COSMOSDB_KEY:", key)
 
-database_name = "VisitorCounterDB"
-container_name = "VisitorCount"
+database_name = "visit-counter"
+container_name = "count"
 
 client = CosmosClient(endpoint, credential=key)  # Use credential parameter for key
 database = client.get_database_client(database_name)
