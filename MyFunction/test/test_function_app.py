@@ -11,7 +11,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from function_app import http_trigger_ham
+from function_app import http_triggershez
 
 @pytest.fixture
 def mock_request():
