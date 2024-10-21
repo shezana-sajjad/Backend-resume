@@ -1,27 +1,56 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for MyFunctionApp
 
+# Trigger this pipeline on every push to the main branch
 on:
   push:
     branches:
       - main
 
+# Define the jobs that this pipeline will run
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12'
+      # Step 1: Checkout the code from the GitHub repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'  # Adjust this based on your project requirements
 
-    - name: Run Tests
-      env:
-        AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}
-        AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}
-      run: pytest test/test_function_app.py
+      # Step 3: Install dependencies from requirements.txt in MyFunction folder
+      - name: Install dependencies
+        run: pip install -r MyFunction/requirements.txt  # Update the path to MyFunction folder
+
+      # Step 4: Run tests using pytest
+      - name: Run Tests
+        env:
+          AZURE_COSMOSDB_ENDPOINT: ${{ secrets.AZURE_COSMOSDB_ENDPOINT }}  # Use your Azure Cosmos DB endpoint from GitHub secrets
+          AZURE_COSMOSDB_KEY: ${{ secrets.AZURE_COSMOSDB_KEY }}  # Use your Azure Cosmos DB key from GitHub secrets
+        run: pytest test/test_function_app.py
+
+      # Step 5: Deploy to Azure Functions (assuming you're using Azure CLI for deployment)
+      - name: Set up Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # You should set this in your GitHub Secrets as a JSON string
+
+      - name: Deploy to Azure Functions
+        run: |
+          az functionapp deployment source config-zip \
+          --resource-group <your-resource-group> \
+          --name <your-function-app-name> \
+          --src-path MyFunction/  # Path to your function app directory
+
+      # Step 6: Purge Azure CDN (if you are using CDN for static content delivery)
+      - name: Purge Azure CDN
+        run: |
+          az cdn endpoint purge \
+          --resource-group <your-resource-group> \
+          --profile-name <your-cdn-profile-name> \
+          --name <your-cdn-endpoint-name> \
+          --content-paths "/*"
