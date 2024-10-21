@@ -1,129 +1,53 @@
-import unittest
+import pytest
 from unittest.mock import patch, MagicMock
-from azure.functions import HttpRequest
+import azure.functions as func
 import json
+import sys
 import os
 from dotenv import load_dotenv
-from azure.cosmos.exceptions import CosmosResourceNotFoundError, CosmosHttpResponseError  # Import correct exceptions
 
-# Load environment variables from .env file
+# Load environment variables from .env file for testing
 load_dotenv()
 
-# Import the function to be tested
-from function_app import visitor_counter
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-class TestVisitorCounterFunction(unittest.TestCase):
+from function_app import http_trigger_ham
 
-    @patch('function_app.container')  # Mock the Cosmos DB container
-    def test_visitor_counter_first_visit(self, mock_container):
-        """Test the case where there is no existing visitor count (first visit)."""
-        
-        # Mock Cosmos DB read_item to raise a CosmosResourceNotFoundError
-        mock_container.read_item.side_effect = CosmosResourceNotFoundError  # Use the correct exception
-        
-        # Mock the upsert_item method
-        mock_container.upsert_item = MagicMock()
-        
-        # Create an HTTP request (empty, since it doesn't depend on the body)
-        req = HttpRequest(
-            method='GET',
-            url='/api/visitor-counter',
-            body=None,
-            params={}
-        )
+@pytest.fixture
+def mock_request():
+    req = MagicMock(spec=func.HttpRequest)
+    req.params = {}
+    req.get_json.return_value = {}
+    return req
 
-        # Call the function
-        response = visitor_counter(req)
-        
-        # Assert the status code and response content
-        self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.get_body())
-        self.assertEqual(response_data['count'], 1)  # Since it's the first visit
-        
-        # Ensure upsert_item was called to insert the count
-        mock_container.upsert_item.assert_called_with({'id': 'visitor_count', 'count': 1})
+@patch('function_app.container')
+def test_http_triggershez_with_name(mock_container, mock_request, monkeypatch):
+    # Load environment variables for testing
+    monkeypatch.setenv("AZURE_COSMOSDB_ENDPOINT", os.getenv("AZURE_COSMOSDB_ENDPOINT"))
+    monkeypatch.setenv("AZURE_COSMOSDB_KEY", os.getenv("AZURE_COSMOSDB_KEY"))
 
-    @patch('function_app.container')  # Mock the Cosmos DB container
-    def test_visitor_counter_subsequent_visit(self, mock_container):
-        """Test the case where there is an existing visitor count (subsequent visit)."""
-        
-        # Mock Cosmos DB to return an existing visitor count
-        mock_container.read_item.return_value = {'id': 'visitor_count', 'count': 10}
-        
-        # Mock the upsert_item method
-        mock_container.upsert_item = MagicMock()
-        
-        # Create an HTTP request
-        req = HttpRequest(
-            method='GET',
-            url='/api/visitor-counter',
-            body=None,
-            params={}
-        )
+    # Set up the mock return value for the container's read_item method
+    mock_container.read_item.return_value = {'visitor_count': 1}
 
-        # Call the function
-        response = visitor_counter(req)
-        
-        # Assert the status code and response content
-        self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.get_body())
-        self.assertEqual(response_data['count'], 11)  # Since the previous count was 10
-        
-        # Ensure upsert_item was called to update the count
-        mock_container.upsert_item.assert_called_with({'id': 'visitor_count', 'count': 11})
+    # Simulate a request with a name
+    mock_request.get_json.return_value = {'name': 'shez'}
 
-    @patch('function_app.container')  # Mock the Cosmos DB container
-    def test_visitor_counter_cosmos_error(self, mock_container):
-        """Test the case where Cosmos DB raises an error during the request."""
-        
-        # Mock Cosmos DB to raise a CosmosHttpResponseError
-        mock_container.read_item.side_effect = CosmosHttpResponseError  # Use the correct exception
-        
-        # Create an HTTP request
-        req = HttpRequest(
-            method='GET',
-            url='/api/visitor-counter',
-            body=None,
-            params={}
-        )
+    response = http_triggershez(mock_request)
 
-        # Call the function
-        response = visitor_counter(req)
-        
-        # Assert the status code and response content
-        self.assertEqual(response.status_code, 500)
-        response_data = json.loads(response.get_body())
-        self.assertEqual(response_data['error'], "Failed to update the visitor count in Cosmos DB.")
+    assert response.status_code == 200
+    data = json.loads(response.get_body())
+    assert data['message'] == "Hello, shez. Your name has been added to the database."
+    assert data['visitor_count'] == 1
 
-    @patch('function_app.container')  # Mock the Cosmos DB container
-    def test_visitor_counter_with_env_variables(self, mock_container, monkeypatch):
-        """Test with the environment variables for Cosmos DB."""
 
-        # Mock the environment variables for Cosmos DB
-        monkeypatch.setenv("AZURE_COSMOSDB_ENDPOINT", os.getenv("AZURE_COSMOSDB_ENDPOINT"))
-        monkeypatch.setenv("AZURE_COSMOSDB_KEY", os.getenv("AZURE_COSMOSDB_KEY"))
+@patch('function_app.container')
+def test_http_triggershez_without_name(mock_container, mock_request):
+    # Set up the mock return value for the container's read_item method
+    mock_container.read_item.return_value = {'visitor_count': 1}
 
-        # Mock Cosmos DB to return an existing visitor count
-        mock_container.read_item.return_value = {'id': 'visitor_count', 'count': 5}
-
-        # Create an HTTP request
-        req = HttpRequest(
-            method='GET',
-            url='/api/visitor-counter',
-            body=None,
-            params={}
-        )
-
-        # Call the function
-        response = visitor_counter(req)
-        
-        # Assert the status code and response content
-        self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.get_body())
-        self.assertEqual(response_data['count'], 6)  # Since the previous count was 5
-        
-        # Ensure upsert_item was called to update the count
-        mock_container.upsert_item.assert_called_with({'id': 'visitor_count', 'count': 6})
-
-if __name__ == '__main__':
-    unittest.main()
+    response = http_triggershez(mock_request)
+    
+    assert response.status_code == 200
+    data = json.loads(response.get_body())
+    assert data['message'] == "This HTTP triggered function executed successfully."
+    assert data['visitor_count'] == 1
